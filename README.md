@@ -8,7 +8,7 @@ A simple mini-map system built for the browser game [Initium](http://playinitium
 Using this tool is easy. Simply include dependencies and minitium.js to your HTML, and you're good to go!
 
 Creating a mini-map is as simple as:
-```var minimap = new minitium('image-map', 64);```. This creates a minitium object focusing on div ```image-map``` with a tile size of ```64 x 64``` pixels.
+```var minimap = new minitium('image-map', 64, 1, 4);```. This creates a minitium object focusing on div ```image-map``` with a tile size of ```64 x 64``` pixels. This map will have zoom levels ranging from ```1``` to ```4```.
 
 Set the border tile for the map (think fog of war hiding the edges of discovered lands):
 ```minimap.setBorderTile('images/border_tile.png', 128);```
@@ -26,4 +26,4 @@ Finally, initialize and display the map on screen with:
 ```minimap.initialize();```
 
 # Examples
-To see minimap in action, check out the examples folder included.
+To see minitium in action, check out the examples folder included.

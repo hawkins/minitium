@@ -1,26 +1,25 @@
-function minitium (divName, size) {
-    this.maxZoom = 2;
-    this.minZoom = 1;
-    this.borderTile = "fog.png";
-    this.borderSize = size;
-    this.borderTiles = [];
-    this.tileURLs = [];
-    this.tileBounds = [];
-    this.fogOverlap = size*1.0/2;
-    this.tileSize = size; // 64 for example
+function minitium (divName, size, minZoom, maxZoom) {
+    // Leaflet map object
     this.map = L.map(divName, {
-        maxZoom: this.maxZoom,
-        minZoom: this.minZoom,
+        maxZoom: maxZoom,
+        minZoom: minZoom,
         crs: L.CRS.Simple,
         attributionControl: false
-    }).setView([0, 0], this.minZoom);
-    // Function definitions
+    }).setView([0, 0], minZoom);
+    // Instance variables
+    this.borderOverlap = size*1.0/2;
+    this.borderSize = size;
+    this.borderTile = "border.png";
+    this.borderTiles = [];
+    this.tileBounds = [];
+    this.tileSize = size;
+    this.tileURLs = [];
+    // Method definitions
     this.addTile = addTile;
-    this.setBorderTile = setBorderTile;
+    this.drawTile = drawTile;
     this.initialize = initialize;
-    this.setMaxZoom = setMaxZoom;
-    this.setMinZoom = setMinZoom;
-    this.updateFogOverlap = updateFogOverlap;
+    this.setBorderTile = setBorderTile;
+    this.updateBorderOverlap = updateBorderOverlap;
 }
 
 // Array comparator for fog search
@@ -28,14 +27,6 @@ function arraysEqual(a1,a2) {
     return JSON.stringify(a1)==JSON.stringify(a2);
 }
 
-// setBorderTile(string URL, int fogSize);
-function setBorderTile(URL, borderSize) {
-    this.borderTile = URL;
-    this.borderSize = borderSize;
-    this.updateFogOverlap();
-}
-
-// addTile(string URL, int X, int Y);
 function addTile(URL, x, y) {
     this.tileURLs.push(URL);
     this.tileBounds.push(
@@ -45,29 +36,30 @@ function addTile(URL, x, y) {
         ]);
 }
 
-function setMaxZoom(zoom) {
-    this.maxZoom = zoom;
-    this.map.setMaxZoom(this.maxZoom);
+function drawTile(URL, arrayBounds) {
+    var imageBounds = new L.LatLngBounds(
+        this.map.unproject(arrayBounds[0], this.map.getMinZoom()),
+        this.map.unproject(arrayBounds[1], this.map.getMinZoom())
+    );
+    var imageOverlay = new L.imageOverlay(URL, imageBounds);
+    imageOverlay.addTo(this.map);
 }
-function setMinZoom(zoom) {
-    this.minZoom = zoom;
-    this.map.setMinZoom(this.minZoom);
+
+function setBorderTile(URL, borderSize) {
+    this.borderTile = URL;
+    this.borderSize = borderSize;
+    this.updateBorderOverlap();
 }
-function updateFogOverlap() {
-    this.fogOverlap = (this.borderSize - this.tileSize)*1.0 / 3.0;
+
+function updateBorderOverlap() {
+    this.borderOverlap = (this.borderSize - this.tileSize)*1.0 / 3.0;
 }
 
 // draw map and display
 function initialize() {
     // Add image overlays for each tile
     for (var i = 0; i < this.tileURLs.length; i++) {
-        var imageURL = this.tileURLs[i].toString();
-        var imageBounds = new L.LatLngBounds(
-            this.map.unproject(this.tileBounds[i][0], this.map.getMinZoom()),
-            this.map.unproject(this.tileBounds[i][1], this.map.getMinZoom())
-        );
-        var imageOverlay = new L.imageOverlay(imageURL, imageBounds);
-        imageOverlay.addTo(this.map);
+        this.drawTile(this.tileURLs[i].toString(), this.tileBounds[i]);
     }
 
     // Find center of map
@@ -105,7 +97,6 @@ function initialize() {
 
     // Add fog tiles
     for (var i = 0; i < this.tileBounds.length; i++) {
-        // Start with top fog first
         // Check if top neighbor not in list
         var found = false;
         var goalArray = [
@@ -132,14 +123,10 @@ function initialize() {
                 // Top neighbor does not exist; add fog
                 // Push to borderTileBounds so we know fog exists there already
                 this.borderTiles.push(goalArray);
-                var fogBounds = new L.LatLngBounds(
-                    this.map.unproject(
-                        [this.tileBounds[i][0][0] - this.fogOverlap, this.tileBounds[i][0][1] - this.tileSize + this.fogOverlap], this.map.getMinZoom()),
-                    this.map.unproject(
-                        [this.tileBounds[i][1][0] + this.fogOverlap, this.tileBounds[i][1][1] - this.tileSize - this.fogOverlap], this.map.getMinZoom())
-                );
-                var fogOverlay = new L.imageOverlay(this.borderTile, fogBounds);
-                fogOverlay.addTo(this.map);
+                this.drawTile(this.borderTile, [
+                    [this.tileBounds[i][0][0] - this.borderOverlap, this.tileBounds[i][0][1] - this.tileSize + this.borderOverlap],
+                    [this.tileBounds[i][1][0] + this.borderOverlap, this.tileBounds[i][1][1] - this.tileSize - this.borderOverlap]
+                ]);
         }
 
         // Next, look for bottom neighbor
@@ -168,14 +155,10 @@ function initialize() {
                 // Bottom neighbor does not exist; add fog
                 // Push to borderTileBounds so we know fog exists there already
                 this.borderTiles.push(goalArray);
-                var fogBounds = new L.LatLngBounds(
-                    this.map.unproject(
-                        [this.tileBounds[i][0][0] - this.fogOverlap, this.tileBounds[i][0][1] + this.tileSize + this.fogOverlap], this.map.getMinZoom()),
-                    this.map.unproject(
-                        [this.tileBounds[i][1][0] + this.fogOverlap, this.tileBounds[i][1][1] + this.tileSize - this.fogOverlap], this.map.getMinZoom())
-                );
-                var fogOverlay = new L.imageOverlay(this.borderTile, fogBounds);
-                fogOverlay.addTo(this.map);
+                this.drawTile(this.borderTile, [
+                    [this.tileBounds[i][0][0] - this.borderOverlap, this.tileBounds[i][0][1] + this.tileSize + this.borderOverlap],
+                    [this.tileBounds[i][1][0] + this.borderOverlap, this.tileBounds[i][1][1] + this.tileSize - this.borderOverlap]
+                ]);
         }
 
         // Next, look for left neighbor
@@ -204,14 +187,10 @@ function initialize() {
                 // Left neighbor does not exist; add fog
                 // Push to borderTileBounds so we know fog exists there already
                 this.borderTiles.push(goalArray);
-                var fogBounds = new L.LatLngBounds(
-                    this.map.unproject(
-                        [this.tileBounds[i][0][0] - this.tileSize - this.fogOverlap, this.tileBounds[i][0][1] + this.fogOverlap], this.map.getMinZoom()),
-                    this.map.unproject(
-                        [this.tileBounds[i][1][0] - this.tileSize + this.fogOverlap, this.tileBounds[i][1][1] - this.fogOverlap], this.map.getMinZoom())
-                );
-                var fogOverlay = new L.imageOverlay(this.borderTile, fogBounds);
-                fogOverlay.addTo(this.map);
+                this.drawTile(this.borderTile, [
+                    [this.tileBounds[i][0][0] - this.tileSize - this.borderOverlap, this.tileBounds[i][0][1] + this.borderOverlap],
+                    [this.tileBounds[i][1][0] - this.tileSize + this.borderOverlap, this.tileBounds[i][1][1] - this.borderOverlap]
+                ]);
         }
 
         // Next, look for right neighbor
@@ -237,17 +216,13 @@ function initialize() {
             }
         }
         if (found == false) {
-                // Left neighbor does not exist; add fog
+                // Right neighbor does not exist; add fog
                 // Push to borderTileBounds so we know fog exists there already
                 this.borderTiles.push(goalArray);
-                var fogBounds = new L.LatLngBounds(
-                    this.map.unproject(
-                        [this.tileBounds[i][0][0] + this.tileSize - this.fogOverlap, this.tileBounds[i][0][1] + this.fogOverlap], this.map.getMinZoom()),
-                    this.map.unproject(
-                        [this.tileBounds[i][1][0] + this.tileSize + this.fogOverlap, this.tileBounds[i][1][1] - this.fogOverlap], this.map.getMinZoom())
-                );
-                var fogOverlay = new L.imageOverlay(this.borderTile, fogBounds);
-                fogOverlay.addTo(this.map);
+                this.drawTile(this.borderTile, [
+                    [this.tileBounds[i][0][0] + this.tileSize - this.borderOverlap, this.tileBounds[i][0][1] + this.borderOverlap],
+                    [this.tileBounds[i][1][0] + this.tileSize + this.borderOverlap, this.tileBounds[i][1][1] - this.borderOverlap],
+                ]);
         }
     }
 }

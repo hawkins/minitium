@@ -1,4 +1,4 @@
-var minimap = new minitium('image-map', 128);
+var minimap = new minitium('image-map', 128, 1, 3);
 
 minimap.addTile('images/map-sample_01.jpg', 0, 0);
 minimap.addTile('images/map-sample_02.jpg', 1, 0);
@@ -24,7 +24,6 @@ minimap.addTile('images/map-sample_21.jpg', 2, 3);
 minimap.addTile('images/map-sample_22.jpg', 3, 3);
 minimap.addTile('images/map-sample_23.jpg', 4, 3);
 minimap.addTile('images/map-sample_24.jpg', 5, 3);
-
 
 minimap.setBorderTile('images/map-fog.png', 181);
 minimap.initialize();

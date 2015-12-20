@@ -1,4 +1,4 @@
-var minimap = new minitium('image-map', 100);
+var minimap = new minitium('image-map', 100, 1, 2);
 
 minimap.addTile('1.png', 0, 0);
 minimap.addTile('2.png', 1, 1);
