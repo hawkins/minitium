@@ -54,7 +54,7 @@ function setMinZoom(zoom) {
     this.map.setMinZoom(this.minZoom);
 }
 function updateFogOverlap() {
-    this.fogOverlap = (this.borderSize - this.tileSize)*1.0 / 3.5;
+    this.fogOverlap = (this.borderSize - this.tileSize)*1.0 / 3.0;
 }
 
 // draw map and display
