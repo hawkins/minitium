@@ -10,7 +10,7 @@ function minitium (divName, size, minZoom, maxZoom) {
     this.borderOverlap = size*1.0/2;
     this.borderSize = size;
     this.borderTile = "border.png";
-    this.borderTiles = [];
+    this.borderTileCovers = [];
     this.tileBounds = [];
     this.tileSize = size;
     this.tileURLs = [];
@@ -25,6 +25,15 @@ function minitium (divName, size, minZoom, maxZoom) {
 // Array comparator for fog search
 function arraysEqual(a1,a2) {
     return JSON.stringify(a1)==JSON.stringify(a2);
+}
+// Array searcher for fog search
+function arrayContains(a1,a2) {
+    for (var n = 0; n < a1.length; n++) {
+        if (arraysEqual(a1[n],a2)) {
+            return true;
+        }
+    }
+    return false;
 }
 
 function addTile(URL, x, y) {
@@ -98,31 +107,13 @@ function initialize() {
     // Add fog tiles
     for (var i = 0; i < this.tileBounds.length; i++) {
         // Check if top neighbor not in list
-        var found = false;
         var goalArray = [
             [this.tileBounds[i][0][0], this.tileBounds[i][0][1] - this.tileSize],
             [this.tileBounds[i][1][0], this.tileBounds[i][1][1] - this.tileSize]
         ];
-        for (var j = 0; j < this.tileBounds.length; j++) {
-            // if goal is found, fog not needed
-            if (arraysEqual(goalArray, this.tileBounds[j])) {
-                found = true;
-                break;
-            }
-        }
-        if (found == false) {
-            for (var j = 0; j < this.borderTiles.length; j++) {
-                // if goal is found, fog not needed
-                if (arraysEqual(goalArray, this.borderTiles[j])) {
-                    found = true;
-                    break;
-                }
-            }
-        }
-        if (found == false) {
+        if (!arrayContains(this.tileBounds, goalArray) && !arrayContains(this.borderTileCovers, goalArray)) {
                 // Top neighbor does not exist; add fog
-                // Push to borderTileBounds so we know fog exists there already
-                this.borderTiles.push(goalArray);
+                this.borderTileCovers.push(goalArray); // Push to array so we know fog exists there already
                 this.drawTile(this.borderTile, [
                     [this.tileBounds[i][0][0] - this.borderOverlap, this.tileBounds[i][0][1] - this.tileSize + this.borderOverlap],
                     [this.tileBounds[i][1][0] + this.borderOverlap, this.tileBounds[i][1][1] - this.tileSize - this.borderOverlap]
@@ -130,31 +121,13 @@ function initialize() {
         }
 
         // Next, look for bottom neighbor
-        found = false;
         goalArray = [
             [this.tileBounds[i][0][0], this.tileBounds[i][0][1] + this.tileSize],
             [this.tileBounds[i][1][0], this.tileBounds[i][1][1] + this.tileSize]
         ];
-        for (var j = 0; j < this.tileBounds.length; j++) {
-            // if goal is found, fog not needed
-            if (arraysEqual(goalArray, this.tileBounds[j])) {
-                found = true;
-                break;
-            }
-        }
-        if (found == false) {
-            for (var j = 0; j < this.borderTiles.length; j++) {
-                // if goal is found, fog not needed
-                if (arraysEqual(goalArray, this.borderTiles[j])) {
-                    found = true;
-                    break;
-                }
-            }
-        }
-        if (found == false) {
+        if (!arrayContains(this.tileBounds, goalArray) && !arrayContains(this.borderTileCovers, goalArray)) {
                 // Bottom neighbor does not exist; add fog
-                // Push to borderTileBounds so we know fog exists there already
-                this.borderTiles.push(goalArray);
+                this.borderTileCovers.push(goalArray); // Push to array so we know fog exists there already
                 this.drawTile(this.borderTile, [
                     [this.tileBounds[i][0][0] - this.borderOverlap, this.tileBounds[i][0][1] + this.tileSize + this.borderOverlap],
                     [this.tileBounds[i][1][0] + this.borderOverlap, this.tileBounds[i][1][1] + this.tileSize - this.borderOverlap]
@@ -162,31 +135,13 @@ function initialize() {
         }
 
         // Next, look for left neighbor
-        found = false;
         goalArray = [
             [this.tileBounds[i][0][0] - this.tileSize, this.tileBounds[i][0][1]],
             [this.tileBounds[i][1][0] - this.tileSize, this.tileBounds[i][1][1]]
         ];
-        for (var j = 0; j < this.tileBounds.length; j++) {
-            // if goal is found, fog not needed
-            if (arraysEqual(goalArray, this.tileBounds[j])) {
-                found = true;
-                break;
-            }
-        }
-        if (found == false) {
-            for (var j = 0; j < this.borderTiles.length; j++) {
-                // if goal is found, fog not needed
-                if (arraysEqual(goalArray, this.borderTiles[j])) {
-                    found = true;
-                    break;
-                }
-            }
-        }
-        if (found == false) {
+        if (!arrayContains(this.tileBounds, goalArray) && !arrayContains(this.borderTileCovers, goalArray)) {
                 // Left neighbor does not exist; add fog
-                // Push to borderTileBounds so we know fog exists there already
-                this.borderTiles.push(goalArray);
+                this.borderTileCovers.push(goalArray); // Push to array so we know fog exists there already
                 this.drawTile(this.borderTile, [
                     [this.tileBounds[i][0][0] - this.tileSize - this.borderOverlap, this.tileBounds[i][0][1] + this.borderOverlap],
                     [this.tileBounds[i][1][0] - this.tileSize + this.borderOverlap, this.tileBounds[i][1][1] - this.borderOverlap]
@@ -194,31 +149,13 @@ function initialize() {
         }
 
         // Next, look for right neighbor
-        found = false;
         goalArray = [
             [this.tileBounds[i][0][0] + this.tileSize, this.tileBounds[i][0][1]],
             [this.tileBounds[i][1][0] + this.tileSize, this.tileBounds[i][1][1]]
         ];
-        for (var j = 0; j < this.tileBounds.length; j++) {
-            // if goal is found, fog not needed
-            if (arraysEqual(goalArray, this.tileBounds[j])) {
-                found = true;
-                break;
-            }
-        }
-        if (found == false) {
-            for (var j = 0; j < this.borderTiles.length; j++) {
-                // if goal is found, fog not needed
-                if (arraysEqual(goalArray, this.borderTiles[j])) {
-                    found = true;
-                    break;
-                }
-            }
-        }
-        if (found == false) {
+        if (!arrayContains(this.tileBounds, goalArray) && !arrayContains(this.borderTileCovers, goalArray)) {
                 // Right neighbor does not exist; add fog
-                // Push to borderTileBounds so we know fog exists there already
-                this.borderTiles.push(goalArray);
+                this.borderTileCovers.push(goalArray); // Push to array so we know fog exists there already
                 this.drawTile(this.borderTile, [
                     [this.tileBounds[i][0][0] + this.tileSize - this.borderOverlap, this.tileBounds[i][0][1] + this.borderOverlap],
                     [this.tileBounds[i][1][0] + this.tileSize + this.borderOverlap, this.tileBounds[i][1][1] - this.borderOverlap],
