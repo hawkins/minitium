@@ -22,8 +22,7 @@ minimap.addTile('images/tile_02.jpg', 1, 0);
 minimap.addTile('images/tile_03.jpg', 1, 2);
 ```
 
-Finally, initialize and display the map on screen with:
-```minimap.initialize();```
+Finally, initialize and display the map on screen with: ```minimap.initialize();```
 
 # Examples
 To see minitium in action, check out the examples folder included.
